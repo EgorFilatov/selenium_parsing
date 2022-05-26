@@ -10,6 +10,7 @@ import os
 
 
 link = 'https://www.g2.com/categories?utf8=✓&q%5Bsearch_query_cont%5D=&q%5Bcategory_type_eq%5D=software'
+FILE = 'g2_information.csv'
 
 
 def page_code(link):
@@ -54,9 +55,7 @@ def main_page_information(page_code):
     return information
 
 
-def categories_page_information():
-    html = page_code('https://www.g2.com/categories/pricing')
-
+def categories_page_information(html):
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.find_all('div', class_='paper pt-half pb-0 my-1 x-ordered-events-initialized')
     information = []
@@ -66,17 +65,31 @@ def categories_page_information():
             'company_name': el.find('div', class_='product-listing__product-name').get_text(strip=True),
             'company_information': company_information,
         })
-    print(information)
+    return information
+
+
+def save_file(items_information, path):
+    with open(path, 'w', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
+        writer.writerow(['category', 'Company name', 'company information'])
+        for el in items_information:
+            writer.writerow(['a', el['company_name'], el['company_information']])
 
 
 def parsing():
     html = page_code(link)
     main_information = main_page_information(html)
-    categories_information = []
+
+    html = page_code(main_information[0]['link'])
+    categories_information = categories_page_information(html)
+    save_file(categories_information, FILE)
     #for el in main_information:
     #    html = page_code(el['link'])
     #    categories_page_information(html)
-    print(main_information)
+    print(categories_information)
 
 
-get_pages_count()
+
+
+
+parsing()
