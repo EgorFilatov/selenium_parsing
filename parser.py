@@ -1,11 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium_stealth import stealth
 import time
 from selenium.webdriver.common.by import By
 import cfscrape
 import csv
 import os
+
 
 link = 'https://www.g2.com/categories?utf8=✓&q%5Bsearch_query_cont%5D=&q%5Bcategory_type_eq%5D=software'
 
@@ -14,7 +16,28 @@ def page_code(link):
     driver = webdriver.Chrome()
     driver.get(link)
     page_code = driver.page_source
+    stealth(driver,
+            languages=["en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win32",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True,
+            )
     return page_code
+
+
+def get_pages_count():
+    html = page_code('https://www.g2.com/categories/pricing')
+
+    soup = BeautifulSoup(html, 'html.parser')
+    pagination = soup.find_all('a', class_='pagination__named-link js-log-click')
+    last_page_link = pagination[1].get('href')
+    pages_count_start = last_page_link.find("page=") + 5
+    pages_count_end = last_page_link.find("#")
+    pages_count = last_page_link[pages_count_start:pages_count_end]
+    print(pages_count)
+
 
 
 def main_page_information(page_code):
@@ -56,4 +79,4 @@ def parsing():
     print(main_information)
 
 
-categories_page_information()
+get_pages_count()
