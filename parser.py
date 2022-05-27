@@ -68,25 +68,32 @@ def categories_page_information(html):
     return information
 
 
-def save_file(items_information, path):
-    with open(path, 'w', newline='') as file:
+def save_file(items_information, cat, path):
+    with open(path, 'w', encoding='utf8', newline='') as file:
         writer = csv.writer(file, delimiter=';')
-        writer.writerow(['category', 'Company name', 'company information'])
+        writer.writerow(['CATEGORY', 'COMPANY NAME', 'COMPANY INFORMATION'])
         for el in items_information:
-            writer.writerow(['a', el['company_name'], el['company_information']])
+            writer.writerow([cat, el['company_name'], el['company_information']])
 
 
 def parsing():
     html = page_code(link)
     main_information = main_page_information(html)
+    i = 0
+    for el in main_information:
+        html = page_code(el['link'])
+        category = el['category_name']
+        categories_information = categories_page_information(html)
+        if i == 0:
+            save_file(categories_information, category, FILE)
+            i = 1
+        else:
+            with open(FILE, 'a', encoding='utf8', newline='') as file:
+                writer = csv.writer(file, delimiter=';')
+                for el in categories_information:
+                    writer.writerow([category, el['company_name'], el['company_information']])
 
-    html = page_code(main_information[0]['link'])
-    categories_information = categories_page_information(html)
-    save_file(categories_information, FILE)
-    #for el in main_information:
-    #    html = page_code(el['link'])
-    #    categories_page_information(html)
-    print(categories_information)
+        print(categories_information)
 
 
 
