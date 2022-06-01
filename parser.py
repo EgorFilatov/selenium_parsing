@@ -58,12 +58,17 @@ def main_page_information(page_code):
 def categories_page_information(html):
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.find_all('div', class_='paper pt-half pb-0 my-1 x-ordered-events-initialized')
+    if soup.find('a', text='Next ›'):
+        next_page = soup.find('a', text='Next ›').get('href')
+    else:
+        next_page = 0
     information = []
     for el in items:
         company_information = el.find('span', class_='product-listing__paragraph').get_text(strip=True).replace('\n\n', ' ').replace('...Show More', ' ').replace('\n', '') + el.find('span', class_='product-listing__paragraph').get('data-truncate-revealer-overflow-text').replace('\n\n', ' ').replace('\n', '')
         information.append({
             'company_name': el.find('div', class_='product-listing__product-name').get_text(strip=True),
             'company_information': company_information,
+            'next_page': next_page,
         })
     return information
 
@@ -72,6 +77,13 @@ def save_file(items_information, cat, path):
     with open(path, 'w', encoding='utf8', newline='') as file:
         writer = csv.writer(file, delimiter=';')
         writer.writerow(['CATEGORY', 'COMPANY NAME', 'COMPANY INFORMATION'])
+        for el in items_information:
+            writer.writerow([cat, el['company_name'], el['company_information']])
+
+
+def add_to_file(items_information, cat, path):
+    with open(path, 'a', encoding='utf8', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
         for el in items_information:
             writer.writerow([cat, el['company_name'], el['company_information']])
 
@@ -86,14 +98,26 @@ def parsing():
         categories_information = categories_page_information(html)
         if i == 0:
             save_file(categories_information, category, FILE)
+            while categories_information[0]['next_page']:
+
+                html = page_code(categories_information[0]['next_page'])
+                categories_information = categories_page_information(html)
+                print('func_end= ', categories_information)
+                if len(categories_information) == 0:
+                    break
+                add_to_file(categories_information, category,FILE)
             i = 1
         else:
-            with open(FILE, 'a', encoding='utf8', newline='') as file:
-                writer = csv.writer(file, delimiter=';')
-                for el in categories_information:
-                    writer.writerow([category, el['company_name'], el['company_information']])
+            add_to_file(categories_information, category,FILE)
+            while categories_information[0]['next_page']:
 
-        print(categories_information)
+                html = page_code(categories_information[0]['next_page'])
+                categories_information = categories_page_information(html)
+                print('func_end= ', categories_information)
+                if len(categories_information) == 0:
+                    break
+                add_to_file(categories_information, category,FILE)
+
 
 
 
